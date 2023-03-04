@@ -15,18 +15,65 @@ BETA: 随机性因子
 '''
 (ALPHA, BETA, RHO, Q) = (1.0, 2.0, 0.5, 100.0)
 # 城市数，蚁群
-(city_num, ant_num) = (15, 15)
+(city_num, ant_num) = (17, 17)
 
+cities = ["重庆", "宜昌", "常德", "襄樊", "荆门", "荆州", "岳阳", "信阳", "孝感", "武汉", "合肥", "安庆", "九江", "滁州", "芜湖",
+          "马鞍山", "南京"]
 distance_x = [
-    100, 200, 200, 300, 300, 400, 400, 400, 500, 500, 500, 600, 600, 600, 700]
-distance_y = [
-    350, 600, 300, 400, 800, 450, 650, 250, 450, 310, 250, 850, 350, 460, 350]
+    100, 200, 200, 300, 300, 300, 300, 400, 400, 400, 500, 500, 500, 600, 600, 600, 700]
 # distance_y = [
-#     350, 400, 300, 400, 300, 450, 350, 250, 450, 350, 250, 450, 350, 250, 350]
+#    350, 600, 300, 400, 800, 450, 650, 250, 450, 310, 250, 850, 350, 460, 350]
+distance_y = [
+    350, 400, 300, 500, 400, 300, 200, 450, 350, 250, 450, 350, 250, 450, 350, 250, 350]
 destination = len(distance_x) - 1
 # 城市分级
-connectivity = {0: [1, 2], 1: [3, 4], 2: [3, 4], 3: [5, 6, 7], 4: [5, 6, 7], 5: [8, 9, 10], 6: [8, 9, 10],
-                7: [8, 9, 10], 8: [11, 12, 13], 9: [11, 12, 13], 10: [11, 12, 13], 11: [14], 12: [14], 13: [14]}
+connectivity = {0: [1, 2], 1: [3, 4, 5], 2: [3, 4, 5, 6], 3: [7, 8, 9], 4: [7, 8, 9], 5: [7, 8, 9], 6: [7, 8, 9],
+                7: [10, 11, 12], 8: [10, 11, 12], 9: [10, 11, 12], 10: [13, 14, 15], 11: [13, 14, 15], 12: [13, 14, 15],
+                13: [16], 14: [16], 15: [16]}
+distances_highway = [[0 for i in range(len(distance_x))] for i in range(len(distance_x))]
+distances_highway[0][1] = 560
+distances_highway[0][2] = 690
+distances_highway[1][3] = 240
+distances_highway[1][4] = 114
+distances_highway[1][5] = 110
+distances_highway[1][6] = 268
+distances_highway[2][3] = 379
+distances_highway[2][4] = 245
+distances_highway[2][5] = 170
+distances_highway[2][6] = 178
+distances_highway[3][7] = 228
+distances_highway[3][8] = 372
+distances_highway[3][9] = 421
+distances_highway[4][7] = 275
+distances_highway[4][8] = 182
+distances_highway[4][9] = 224
+distances_highway[5][7] = 315
+distances_highway[5][8] = 204
+distances_highway[5][9] = 218
+distances_highway[6][7] = 362
+distances_highway[6][8] = 236
+distances_highway[6][9] = 196
+distances_highway[7][10] = 327
+distances_highway[7][11] = 425
+distances_highway[7][12] = 422
+distances_highway[8][10] = 392
+distances_highway[8][11] = 362
+distances_highway[8][12] = 316
+distances_highway[9][10] = 371
+distances_highway[9][11] = 321
+distances_highway[9][12] = 258
+distances_highway[10][13] = 119
+distances_highway[10][14] = 132
+distances_highway[10][15] = 145
+distances_highway[11][13] = 272
+distances_highway[11][14] = 182
+distances_highway[11][15] = 232
+distances_highway[12][13] = 454
+distances_highway[12][14] = 352
+distances_highway[12][15] = 400
+distances_highway[13][16] = 64
+distances_highway[14][16] = 97
+distances_highway[15][16] = 52
 
 # connectivity = [[0 for i in range(15)] for i in range(15)]
 # connectivity[0][1] = 1
@@ -105,7 +152,7 @@ class Ant(object):
                 try:
                     # 计算概率：与信息素浓度成正比，与距离成反比
                     select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(
-                        (1.0 / distance_graph[self.current_city][i]), BETA)
+                        (1.0 / distances_highway[self.current_city][i]), BETA)
                     total_prob += select_citys_prob[i]
                 except ZeroDivisionError as e:
                     print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,
@@ -139,8 +186,8 @@ class Ant(object):
         temp_distance = 0.0
 
         for i in range(1, len(self.path)):
-            start, end = self.path[i], self.path[i - 1]
-            temp_distance += distance_graph[start][end]
+            start, end = self.path[i - 1], self.path[i]
+            temp_distance += distances_highway[start][end]
 
         # # 回路
         # end = self.path[0]
@@ -152,7 +199,7 @@ class Ant(object):
 
         self.path.append(next_city)
         self.open_table_city[next_city] = False
-        self.total_distance += distance_graph[self.current_city][next_city]
+        self.total_distance += distances_highway[self.current_city][next_city]
         self.current_city = next_city
         self.move_count += 1
 
@@ -165,7 +212,6 @@ class Ant(object):
         # 搜素路径，到达终点为止
         while self.move_count < city_num:
             # 移动到下一个城市
-            print(self.path)
             next_city = self.__choice_next_city()
             self.__move(next_city)
             if destination in self.path:
@@ -204,12 +250,12 @@ class TSP(object):
         self.__bindEvents()
         self.new()
 
-        # 计算城市之间的距离
-        for i in range(city_num):
-            for j in range(city_num):
-                temp_distance = pow((distance_x[i] - distance_x[j]), 2) + pow((distance_y[i] - distance_y[j]), 2)
-                temp_distance = pow(temp_distance, 0.5)
-                distance_graph[i][j] = float(int(temp_distance + 0.5))
+        # 城市间公路距离
+        # for i in range(city_num):
+        #     for j in range(city_num):
+        #         temp_distance = pow((distance_x[i] - distance_x[j]), 2) + pow((distance_y[i] - distance_y[j]), 2)
+        #         temp_distance = pow(temp_distance, 0.5)
+        #         distance_graph[i][j] = float(int(temp_distance + 0.5))
 
     # 按键响应程序
     def __bindEvents(self):
@@ -252,7 +298,7 @@ class TSP(object):
             self.nodes2.append(node)
             # 显示坐标
             self.canvas.create_text(x, y - 10,  # 使用create_text方法在坐标（302，77）处绘制文字
-                                    text='(城市 ' + str(i) + ')',  # 所绘制文字的内容
+                                    text= str(i) + ' ' + str(cities[i]),  # 所绘制文字的内容
                                     fill='black'  # 所绘制文字的颜色为灰色
                                     )
 
@@ -325,7 +371,7 @@ class TSP(object):
             # 连线
             self.line(self.best_ant.path)
             # 设置标题
-            self.title("TSP蚁群算法(n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d" % self.iter)
+            self.title("LXR多式联运ACO(n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d" % self.iter)
             # 更新画布
             self.canvas.update()
             self.iter += 1
@@ -339,6 +385,7 @@ class TSP(object):
             for i in range(1, len(ant.path)):
                 start, end = ant.path[i - 1], ant.path[i]
                 # 在路径上的每两个相邻城市间留下信息素，与路径总距离反比
+                print("1231231    " + str(ant.total_distance))
                 temp_pheromone[start][end] += Q / ant.total_distance
                 temp_pheromone[end][start] = temp_pheromone[start][end]
 
