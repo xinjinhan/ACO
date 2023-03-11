@@ -13,7 +13,7 @@ from functools import reduce
 ALPHA: 信息启发因子
 BETA: 随机性因子
 '''
-(ALPHA, BETA, RHO, Q) = (1.0, 5.0, 0.5, 100.0)
+(ALPHA, BETA, RHO, Q) = (10.0, 1.0, 0.5, 10.0)
 # 城市数，蚁群
 (city_num, ant_num) = (17, 17)
 transports = ["公路", "水路", "铁路"]
@@ -26,6 +26,11 @@ distance_x = [
 distance_y = [
     350, 400, 300, 500, 400, 300, 200, 450, 350, 250, 450, 350, 250, 450, 350, 250, 350]
 destination = len(distance_x) - 1
+
+costLow = [1.42, 1.13, 0.77]
+costMiddle = [1.21, 0.96, 0.58]
+costHigh = [1.07, 0.67, 0.46]
+
 # 城市分级
 connectivity = {0: [1, 2], 1: [3, 4, 5], 2: [3, 4, 5, 6], 3: [7, 8, 9], 4: [7, 8, 9], 5: [7, 8, 9], 6: [7, 8, 9],
                 7: [10, 11, 12], 8: [10, 11, 12], 9: [10, 11, 12], 10: [13, 14, 15], 11: [13, 14, 15], 12: [13, 14, 15],
@@ -104,6 +109,18 @@ class Ant(object):
         self.path.append(city_index)
         self.open_table_city[city_index] = False
         self.move_count = 1
+        self.total_cost = 0
+
+    # 计算距离对应陈本
+    def __cal_cost(self, distance, transport):
+        cost = 0
+        if distance / 500 < 1:
+            cost = distance * costLow[transport]
+        elif distance / 500 <= 2:
+            cost = distance * costMiddle[transport]
+        elif distance / 500 > 2:
+            cost = distance * costHigh[transport]
+        return int(cost)
 
     # 选择下一个城市
     def __choice_next_city_and_transport(self):
@@ -117,8 +134,21 @@ class Ant(object):
             if self.open_table_city[i]:
                 try:
                     # 计算概率：与信息素浓度成正比，与距离成反比
+                    possible_choice_of_path_with_transport = [0, 0, 0]
+                    for j in range(3):
+                        if len(self.trans) != 0 and j != self.trans[-1]:
+                            change_cost = 0
+                            if j in [0, 1] and self.trans[-1] in [0, 1]:
+                                change_cost = 80
+                            elif j in [0, 2] and self.trans[-1] in [0, 2]:
+                                change_cost = 182
+                            elif j in [1, 2] and self.trans[-1] in [1, 2]:
+                                change_cost = 245
+                            possible_choice_of_path_with_transport[j] = change_cost
+                        possible_choice_of_path_with_transport[j] += self.__cal_cost(distances[self.current_city][i][j], j)
+
                     select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(
-                        (1.0 / min(filter(lambda x: x > 0, distances[self.current_city][i]))), BETA)
+                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport))), BETA)
                     total_prob += select_citys_prob[i]
                 except ZeroDivisionError as e:
                     print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,
@@ -150,6 +180,7 @@ class Ant(object):
         # 返回下一个城市序号
         return next_city, transport
 
+
     # 计算路径总距离
     def __cal_total_distance(self):
 
@@ -166,11 +197,22 @@ class Ant(object):
 
     # 移动操作
     def __move(self, next_city, type_transport):
-
+        change_cost = 0
+        if len(self.trans) != 0 and type_transport != self.trans[-1]:
+            change_cost = 0
+            if type_transport in [0, 1] and self.trans[-1] in [0, 1]:
+                change_cost = 80
+            elif type_transport in [0, 2] and self.trans[-1] in [0, 2]:
+                change_cost = 182
+            elif type_transport in [1, 2] and self.trans[-1] in [1, 2]:
+                change_cost = 245
+        self.total_cost += change_cost
         self.path.append(next_city)
         self.trans.append(type_transport)
         self.open_table_city[next_city] = False
-        self.total_distance += distances[self.current_city][next_city][type_transport]
+        current_distance = distances[self.current_city][next_city][type_transport]
+        self.total_distance += current_distance
+        self.total_cost += self.__cal_cost(current_distance, type_transport)
         self.current_city = next_city
         self.move_count += 1
 
@@ -184,11 +226,9 @@ class Ant(object):
         while self.move_count < city_num:
             # 移动到下一个城市
             next_city, type_transport = self.__choice_next_city_and_transport()
-
             self.__move(next_city, type_transport)
             if destination in self.path:
                 break
-
         # 计算路径总长度
         self.__cal_total_distance()
 
@@ -284,7 +324,7 @@ class TSP(object):
 
         self.ants = [Ant(ID) for ID in range(ant_num)]  # 初始蚁群
         self.best_ant = Ant(-1)  # 初始最优解
-        self.best_ant.total_distance = 1 << 31  # 初始最大距离
+        self.best_ant.total_cost = 1 << 31  # 初始最大成本
         self.iter = 1  # 初始化迭代次数
 
     # 将节点按order顺序连线
@@ -334,7 +374,7 @@ class TSP(object):
                 # 搜索一条路径
                 ant.search_path()
                 # 与当前最优蚂蚁比较
-                if ant.total_distance < self.best_ant.total_distance:
+                if ant.total_cost < self.best_ant.total_cost:
                     # 更新最优解
                     self.best_ant = copy.deepcopy(ant)
             # 更新信息素
@@ -346,7 +386,8 @@ class TSP(object):
                 else:
                     path_print += str(cities[self.best_ant.path[i]])
             print(path_print)
-            print(u"迭代次数：", self.iter, u"最佳路径总距离：", int(self.best_ant.total_distance))
+            print(u"迭代次数：", self.iter, u"最佳路径总距离：", int(self.best_ant.total_distance), u"最优成本：",
+                  int(self.best_ant.total_cost))
             # 连线
             self.line(self.best_ant.path)
             # 设置标题
@@ -363,8 +404,8 @@ class TSP(object):
         for ant in self.ants:
             for i in range(1, len(ant.path)):
                 start, end = ant.path[i - 1], ant.path[i]
-                # 在路径上的每两个相邻城市间留下信息素，与路径总距离反比
-                temp_pheromone[start][end] += Q / ant.total_distance
+                # 在路径上的每两个相邻城市间留下信息素，与总成本成反比
+                temp_pheromone[start][end] += Q / ant.total_cost
                 temp_pheromone[end][start] = temp_pheromone[start][end]
 
         # 更新所有城市之间的信息素，旧信息素衰减加上新迭代信息素
