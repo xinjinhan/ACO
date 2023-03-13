@@ -19,15 +19,17 @@ BETA:Beta值越大，蚁群越就容易选择局部较短路径，这时算法�
 # 单位人工碳排放数
 one_man_carbon = 13.55
 # 服务人工数
-server_man_numver = 10
+server_man_number = 10
 # 碳排放额度上限
-carbon_max = 4000
+carbon_max = 40000
 # 碳税
 carbon_tax = 50
 # 运输碳排放系数
 carbon_transports = [0.1716, 0.0154, 0.0331]
 # 转运碳排放系数
 carbon_change = [4.86, 6.42, 8.24]
+# 碳交易与碳补尝
+carbon_remedy_amount = 20
 
 # 城市数，蚁群
 (city_num, ant_num) = (17, 50)
@@ -141,13 +143,16 @@ class Ant(object):
         self.total_time = 0  # 总花费时间
         self.total_change_cost = 0  # 总转运花费资金
         self.total_connecting_cost = 0  # 总衔接成本
+        self.total_carbon_cost = 0  # 总碳排放成本
         self.total_change_time = 0  # 总转运时间
         self.total_transport_cost = 0  # 总运输花费资金
         self.total_transport_time = 0  # 总运输时间
         self.total_safety_cost = 0  # 总安全花费资金
         self.total_punishment_cost = 0  # 总惩罚成本
         self.total_carbon = 0  # 总碳排放量
-
+        self.total_transport_carbon = 0  # 运输碳排放量
+        self.total_transport_change_carbon = 0  # 转换运输碳排放
+        self.total_man_carbon = 0  # 人力总碳排放
 
     # 计算距离对应陈本
     def __cal_cost(self, distance, transport):
@@ -159,6 +164,14 @@ class Ant(object):
         elif distance / 500 > 2:
             cost = distance * cost_high[transport] * num_of_cars
         return int(cost)
+
+
+    # 计算距离对应碳排放
+    def __cal_carbon(self, distance, transport):
+        carbon = distance * carbon_transports[transport] * num_of_cars
+        carbon += distance / transports_speed[transport] * one_man_carbon * server_man_number
+        return int(carbon)
+
 
     # 选择下一个城市
     def __choice_next_city_and_transport_only_ship(self):
@@ -265,20 +278,28 @@ class Ant(object):
                 try:
                     # 计算概率：与信息素浓度成正比，与成本成反比
                     possible_choice_of_path_with_transport = [0, 0, 0]
+                    possible_choice_of_path_with_transport_carbon = [0, 0, 0]
                     # 不同方式间，转运成本不同
                     for j in [0, 1, 2]:
                         if distances[self.current_city][i][j] == 0:
                             continue
                         if len(self.trans) != 0 and j != self.trans[-1]:
                             change_cost = 0
+                            change_carbon = 0
                             if j in [0, 1] and self.trans[-1] in [0, 1]:
                                 change_cost = 245
+                                change_carbon = carbon_change[j]
                             elif j in [0, 2] and self.trans[-1] in [0, 2]:
                                 change_cost = 80
+                                change_carbon = carbon_change[j]
                             elif j in [1, 2] and self.trans[-1] in [1, 2]:
                                 change_cost = 182
+                                change_carbon = carbon_change[j]
                             possible_choice_of_path_with_transport[j] = change_cost * num_of_cars
                             possible_choice_of_path_with_transport[j] += connecting_cost[j] * num_of_cars
+                            possible_choice_of_path_with_transport_carbon[j] = change_carbon * num_of_cars
+                        possible_choice_of_path_with_transport_carbon[j] += \
+                            self.__cal_carbon(distances[self.current_city][i][j], j)
                         possible_choice_of_path_with_transport[j] += \
                             self.__cal_cost(distances[self.current_city][i][j], j)
                     if possible_choice_of_path_with_transport[0] == 0 and possible_choice_of_path_with_transport[1] == 0 \
@@ -286,9 +307,9 @@ class Ant(object):
                         select_citys_prob[i] = 0
                         total_prob += select_citys_prob[i]
                         continue
-
                     select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(
-                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport))), BETA)
+                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport))), BETA) * pow(
+                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport_carbon))), BETA)
                     total_prob += select_citys_prob[i]
                 except ZeroDivisionError as e:
                     print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,
@@ -398,8 +419,10 @@ class Ant(object):
         self.total_connecting_cost += connecting_cost[type_transport] * num_of_cars
         # 当前运输碳排放
         self.total_carbon += current_distance * carbon_transports[type_transport] * num_of_cars
+        self.total_transport_carbon += current_distance * carbon_transports[type_transport] * num_of_cars
         # 当前转运碳排放
         self.total_carbon += change_carbon * num_of_cars
+        self.total_transport_change_carbon += change_carbon * num_of_cars
         self.path.append(next_city)
         self.time_sequence.append(self.total_time)
         self.trans.append(type_transport)
@@ -424,6 +447,12 @@ class Ant(object):
         # 计算路径总长度
         self.__cal_total_distance()
         self.time_sequence.append(self.total_time)
+        # 加入人力碳排放
+        self.total_carbon += self.total_time * one_man_carbon * server_man_number
+        self.total_man_carbon += self.total_time * one_man_carbon * server_man_number
+        # # 加入碳排放成本
+        # self.total_cost += self.total_carbon * carbon_tax
+        # self.total_carbon_cost += self.total_carbon * carbon_tax
 
 
 # ----------- TSP问题 -----------
@@ -434,10 +463,11 @@ class TSP(object):
 
         # 创建画布
         self.max_iter = 15
-        self.total_sampling_times = 100
+        self.total_sampling_times = 20
         self.current_sampling_times = 0
         self.best_ant_after_rerunning = Ant(-1)  # 初始多重实验后的最优解
         self.best_ant_after_rerunning.total_cost = 1 << 31
+        self.best_ant_after_rerunning.total_carbon = 1 << 31
         self.root = root
         self.width = width
         self.height = height
@@ -510,6 +540,7 @@ class TSP(object):
         self.ants = [Ant(ID) for ID in range(ant_num)]  # 初始蚁群
         self.best_ant = Ant(-1)  # 初始最优解
         self.best_ant.total_cost = 1 << 31  # 初始最大成本
+        self.best_ant.total_carbon = 1 << 31  # 初始最大碳排放
         self.iter = 1  # 初始化迭代次数
 
     # 初始化
@@ -555,6 +586,7 @@ class TSP(object):
         self.ants = [Ant(ID) for ID in range(ant_num)]  # 初始蚁群
         self.best_ant = Ant(-1)  # 初始最优解
         self.best_ant.total_cost = 1 << 31  # 初始最大成本
+        self.best_ant.total_carbon = 1 << 31  # 初始最大成本
         self.iter = 1  # 初始化迭代次数
 
     # 将节点按order顺序连线
@@ -605,7 +637,7 @@ class TSP(object):
                     # 搜索一条路径
                     ant.search_path()
                     # 与当前最优蚂蚁比较
-                    if ant.total_cost < self.best_ant.total_cost:
+                    if ant.total_cost < self.best_ant.total_cost or ant.total_carbon < self.best_ant.total_carbon:
                         # 更新最优解
                         self.best_ant = copy.deepcopy(ant)
                 # 更新信息素
@@ -629,10 +661,14 @@ class TSP(object):
                                " 总安全资金成本：{} CNY\n" \
                                " 总衔接成本：{} CNY\n" \
                                " 总惩罚成本：{} CNY\n" \
+                               " 总碳排放成本：{} CNY\n" \
                                " 总时间成本：{} h\n" \
                                " 总转运时间成本：{} h\n" \
-                               " 总运输（路上）时间成本:{}\n h " \
-                               " 总碳排放:{} kg \n " \
+                               " 总运输（路上）时间成本:{} h\n" \
+                               " 总碳排放:{} kg \n" \
+                               " 总运输碳排放:{} kg \n" \
+                               " 总转运碳排放:{} kg \n" \
+                               " 总人力碳排放:{} kg \n"\
                     .format((self.iter + self.max_iter * self.current_sampling_times),
                             str(int(self.best_ant.total_distance)),
                             str(int(self.best_ant.total_cost)),
@@ -641,10 +677,14 @@ class TSP(object):
                             str(int(self.best_ant.total_safety_cost)),
                             str(int(self.best_ant.total_connecting_cost)),
                             str(int(self.best_ant.total_punishment_cost)),
+                            str(int(self.best_ant.total_carbon_cost)),
                             str(round(self.best_ant.total_time, 2)),
                             str(round(self.best_ant.total_change_time, 2)),
                             str(round(self.best_ant.total_transport_time, 2)),
-                            str(round(self.best_ant.total_carbon, 2)))
+                            str(round(self.best_ant.total_carbon, 2)),
+                            str(round(self.best_ant.total_transport_carbon, 2)),
+                            str(round(self.best_ant.total_transport_change_carbon, 2)),
+                            str(round(self.best_ant.total_man_carbon, 2)))
                 print(result_print)
                 # 连线
                 self.line(self.best_ant.path)
@@ -659,43 +699,54 @@ class TSP(object):
                         self.best_ant_after_rerunning = copy.deepcopy(self.best_ant)
                     self.new(evt)
                     self.current_sampling_times += 1
+        print("=======碳强制方案=======\n")
+        if self.best_ant_after_rerunning.total_carbon > carbon_max:
+            result_print = "当前强制碳排放政策下，无法找到满足要求路径"
+        else:
+            # 打印最终最优方案
 
-        # 打印最终最优方案
-        path_print = ""
-        for i in range(len(self.best_ant_after_rerunning.path)):
-            if i != len(self.best_ant_after_rerunning.path) - 1:
-                path_print += str(cities[self.best_ant_after_rerunning.path[i]]) + "(到达时间：" \
-                              + str(round(self.best_ant_after_rerunning.time_sequence[i], 1)) \
-                              + ")-" + str(transports[self.best_ant_after_rerunning.trans[i]]) + "->"
-            else:
-                path_print += str(cities[self.best_ant_after_rerunning.path[i]])
-        path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
-        print(path_print)
-
-        result_print = " 迭代次数：{}\n" \
-                       " 最佳路径总距离：{}\n" \
-                       " 总资金成本：{} CNY\n" \
-                       " 总转运资金成本：{} CNY\n" \
-                       " 总运输（路上）资金成本：{} CNY\n" \
-                       " 总安全资金成本：{} CNY\n" \
-                       " 总衔接成本：{} CNY\n" \
-                       " 总惩罚成本：{} CNY\n" \
-                       " 总时间成本：{} h\n" \
-                       " 总转运时间成本：{} h\n" \
-                       " 总运输（路上）时间成本:{} h\n" \
-                       " 总碳排放:{} kg \n " \
-            .format((self.iter + self.max_iter * self.current_sampling_times - 1),
-                    str(int(self.best_ant_after_rerunning.total_distance)),
-                    str(int(self.best_ant_after_rerunning.total_cost)),
-                    str(int(self.best_ant_after_rerunning.total_change_cost)),
-                    str(int(self.best_ant_after_rerunning.total_transport_cost)),
-                    str(int(self.best_ant_after_rerunning.total_safety_cost)),
-                    str(int(self.best_ant_after_rerunning.total_connecting_cost)),
-                    str(int(self.best_ant_after_rerunning.total_punishment_cost)),
-                    str(round(self.best_ant_after_rerunning.total_time, 2)),
-                    str(round(self.best_ant_after_rerunning.total_change_time, 2)),
-                    str(round(self.best_ant_after_rerunning.total_transport_time, 2)),
-                    str(round(self.best_ant_after_rerunning.total_carbon, 2)))
+            path_print = ""
+            for i in range(len(self.best_ant_after_rerunning.path)):
+                if i != len(self.best_ant_after_rerunning.path) - 1:
+                    path_print += str(cities[self.best_ant_after_rerunning.path[i]]) + "(到达时间：" \
+                                  + str(round(self.best_ant_after_rerunning.time_sequence[i], 1)) \
+                                  + ")-" + str(transports[self.best_ant_after_rerunning.trans[i]]) + "->"
+                else:
+                    path_print += str(cities[self.best_ant_after_rerunning.path[i]])
+            path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
+            print(path_print)
+            result_print = " 迭代次数：{}\n" \
+                           " 最佳路径总距离：{}\n" \
+                           " 总资金成本（不包含碳排放成本）：{} CNY\n" \
+                           " 总转运资金成本：{} CNY\n" \
+                           " 总运输（路上）资金成本：{} CNY\n" \
+                           " 总安全资金成本：{} CNY\n" \
+                           " 总衔接成本：{} CNY\n" \
+                           " 总惩罚成本：{} CNY\n" \
+                           " 总碳排放成本：{} CNY\n" \
+                           " 总时间成本：{} h\n" \
+                           " 总转运时间成本：{} h\n" \
+                           " 总运输（路上）时间成本:{} h\n" \
+                           " 总碳排放:{} kg \n" \
+                           " 总运输碳排放:{} kg \n" \
+                           " 总转运碳排放:{} kg \n" \
+                           " 总人力碳排放:{} kg \n" \
+                .format((self.iter + self.max_iter * self.current_sampling_times - 1),
+                        str(int(self.best_ant_after_rerunning.total_distance)),
+                        str(int(self.best_ant_after_rerunning.total_cost)),
+                        str(int(self.best_ant_after_rerunning.total_change_cost)),
+                        str(int(self.best_ant_after_rerunning.total_transport_cost)),
+                        str(int(self.best_ant_after_rerunning.total_safety_cost)),
+                        str(int(self.best_ant_after_rerunning.total_connecting_cost)),
+                        str(int(self.best_ant_after_rerunning.total_punishment_cost)),
+                        str(int(self.best_ant_after_rerunning.total_carbon_cost)),
+                        str(round(self.best_ant_after_rerunning.total_time, 2)),
+                        str(round(self.best_ant_after_rerunning.total_change_time, 2)),
+                        str(round(self.best_ant_after_rerunning.total_transport_time, 2)),
+                        str(round(self.best_ant_after_rerunning.total_carbon, 2)),
+                        str(round(self.best_ant_after_rerunning.total_transport_carbon, 2)),
+                        str(round(self.best_ant_after_rerunning.total_transport_change_carbon, 2)),
+                        str(round(self.best_ant_after_rerunning.total_man_carbon, 2)))
         print(result_print)
         self.line(self.best_ant_after_rerunning.path)
         self.stop(evt)
@@ -727,7 +778,7 @@ class TSP(object):
 if __name__ == '__main__':
     print(u""" 
 --------------------------------------------------------
-    程序：冲冲冲
+    程序：ACO-多式联运-碳强制
 -------------------------------------------------------- 
     """)
     TSP(tkinter.Tk()).mainloop()

@@ -19,7 +19,7 @@ BETA:Beta值越大，蚁群越就容易选择局部较短路径，这时算法�
 # 单位人工碳排放数
 one_man_carbon = 13.55
 # 服务人工数
-server_man_numver = 10
+server_man_number = 10
 # 碳排放额度上限
 carbon_max = 4000
 # 碳税
@@ -28,6 +28,8 @@ carbon_tax = 50
 carbon_transports = [0.1716, 0.0154, 0.0331]
 # 转运碳排放系数
 carbon_change = [4.86, 6.42, 8.24]
+# 碳交易与碳补尝
+carbon_remedy_amount = 20
 
 # 城市数，蚁群
 (city_num, ant_num) = (17, 50)
@@ -141,13 +143,16 @@ class Ant(object):
         self.total_time = 0  # 总花费时间
         self.total_change_cost = 0  # 总转运花费资金
         self.total_connecting_cost = 0  # 总衔接成本
+        self.total_carbon_cost = 0  # 总碳排放成本
         self.total_change_time = 0  # 总转运时间
         self.total_transport_cost = 0  # 总运输花费资金
         self.total_transport_time = 0  # 总运输时间
         self.total_safety_cost = 0  # 总安全花费资金
         self.total_punishment_cost = 0  # 总惩罚成本
         self.total_carbon = 0  # 总碳排放量
-
+        self.total_transport_carbon = 0  # 运输碳排放量
+        self.total_transport_change_carbon = 0  # 转换运输碳排放
+        self.total_man_carbon = 0  # 人力总碳排放
 
     # 计算距离对应陈本
     def __cal_cost(self, distance, transport):
@@ -398,8 +403,10 @@ class Ant(object):
         self.total_connecting_cost += connecting_cost[type_transport] * num_of_cars
         # 当前运输碳排放
         self.total_carbon += current_distance * carbon_transports[type_transport] * num_of_cars
+        self.total_transport_carbon += current_distance * carbon_transports[type_transport] * num_of_cars
         # 当前转运碳排放
         self.total_carbon += change_carbon * num_of_cars
+        self.total_transport_change_carbon += change_carbon * num_of_cars
         self.path.append(next_city)
         self.time_sequence.append(self.total_time)
         self.trans.append(type_transport)
@@ -424,6 +431,12 @@ class Ant(object):
         # 计算路径总长度
         self.__cal_total_distance()
         self.time_sequence.append(self.total_time)
+        # 加入人力碳排放
+        self.total_carbon += self.total_time * one_man_carbon * server_man_number
+        self.total_man_carbon += self.total_time * one_man_carbon * server_man_number
+        # 加入碳排放成本
+        self.total_cost += self.total_carbon * carbon_tax
+        self.total_carbon_cost += self.total_carbon * carbon_tax
 
 
 # ----------- TSP问题 -----------
@@ -629,10 +642,14 @@ class TSP(object):
                                " 总安全资金成本：{} CNY\n" \
                                " 总衔接成本：{} CNY\n" \
                                " 总惩罚成本：{} CNY\n" \
+                               " 总碳排放成本：{} CNY\n" \
                                " 总时间成本：{} h\n" \
                                " 总转运时间成本：{} h\n" \
-                               " 总运输（路上）时间成本:{}\n h " \
-                               " 总碳排放:{} kg \n " \
+                               " 总运输（路上）时间成本:{} h\n" \
+                               " 总碳排放:{} kg \n" \
+                               " 总运输碳排放:{} kg \n" \
+                               " 总转运碳排放:{} kg \n" \
+                               " 总人力碳排放:{} kg \n"\
                     .format((self.iter + self.max_iter * self.current_sampling_times),
                             str(int(self.best_ant.total_distance)),
                             str(int(self.best_ant.total_cost)),
@@ -641,10 +658,14 @@ class TSP(object):
                             str(int(self.best_ant.total_safety_cost)),
                             str(int(self.best_ant.total_connecting_cost)),
                             str(int(self.best_ant.total_punishment_cost)),
+                            str(int(self.best_ant.total_carbon_cost)),
                             str(round(self.best_ant.total_time, 2)),
                             str(round(self.best_ant.total_change_time, 2)),
                             str(round(self.best_ant.total_transport_time, 2)),
-                            str(round(self.best_ant.total_carbon, 2)))
+                            str(round(self.best_ant.total_carbon, 2)),
+                            str(round(self.best_ant.total_transport_carbon, 2)),
+                            str(round(self.best_ant.total_transport_change_carbon, 2)),
+                            str(round(self.best_ant.total_man_carbon, 2)))
                 print(result_print)
                 # 连线
                 self.line(self.best_ant.path)
@@ -661,6 +682,7 @@ class TSP(object):
                     self.current_sampling_times += 1
 
         # 打印最终最优方案
+        print("=======碳税方案=======")
         path_print = ""
         for i in range(len(self.best_ant_after_rerunning.path)):
             if i != len(self.best_ant_after_rerunning.path) - 1:
@@ -680,10 +702,14 @@ class TSP(object):
                        " 总安全资金成本：{} CNY\n" \
                        " 总衔接成本：{} CNY\n" \
                        " 总惩罚成本：{} CNY\n" \
+                       " 总碳排放成本：{} CNY\n" \
                        " 总时间成本：{} h\n" \
                        " 总转运时间成本：{} h\n" \
                        " 总运输（路上）时间成本:{} h\n" \
-                       " 总碳排放:{} kg \n " \
+                       " 总碳排放:{} kg \n" \
+                       " 总运输碳排放:{} kg \n" \
+                       " 总转运碳排放:{} kg \n" \
+                       " 总人力碳排放:{} kg \n" \
             .format((self.iter + self.max_iter * self.current_sampling_times - 1),
                     str(int(self.best_ant_after_rerunning.total_distance)),
                     str(int(self.best_ant_after_rerunning.total_cost)),
@@ -692,10 +718,14 @@ class TSP(object):
                     str(int(self.best_ant_after_rerunning.total_safety_cost)),
                     str(int(self.best_ant_after_rerunning.total_connecting_cost)),
                     str(int(self.best_ant_after_rerunning.total_punishment_cost)),
+                    str(int(self.best_ant_after_rerunning.total_carbon_cost)),
                     str(round(self.best_ant_after_rerunning.total_time, 2)),
                     str(round(self.best_ant_after_rerunning.total_change_time, 2)),
                     str(round(self.best_ant_after_rerunning.total_transport_time, 2)),
-                    str(round(self.best_ant_after_rerunning.total_carbon, 2)))
+                    str(round(self.best_ant_after_rerunning.total_carbon, 2)),
+                    str(round(self.best_ant_after_rerunning.total_transport_carbon, 2)),
+                    str(round(self.best_ant_after_rerunning.total_transport_change_carbon, 2)),
+                    str(round(self.best_ant_after_rerunning.total_man_carbon, 2)))
         print(result_print)
         self.line(self.best_ant_after_rerunning.path)
         self.stop(evt)
@@ -727,7 +757,7 @@ class TSP(object):
 if __name__ == '__main__':
     print(u""" 
 --------------------------------------------------------
-    程序：冲冲冲
+    程序：ACO-多式联运-碳税
 -------------------------------------------------------- 
     """)
     TSP(tkinter.Tk()).mainloop()
