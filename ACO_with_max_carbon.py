@@ -32,7 +32,7 @@ carbon_change = [4.86, 6.42, 8.24]
 carbon_remedy_amount = 20
 
 # 城市数，蚁群
-(city_num, ant_num) = (17, 50)
+(city_num, ant_num) = (22, 50)
 # 运输汽车数量
 num_of_cars = 229
 # 可选运输方式
@@ -44,73 +44,92 @@ safety_cost = [0.042, 0.018, 0.022]
 # 到达时间窗
 delivering_time_window = [0, 100]
 # 城市
-cities = ["重庆", "宜昌", "常德", "襄樊", "荆门", "荆州", "岳阳", "信阳", "孝感", "武汉", "合肥", "安庆", "九江", "滁州", "芜湖",
-          "马鞍山", "南京"]
+cities = ["重庆主机厂", "团结村", "果园港", "唐家沱", "宜昌", "常德", "襄樊", "荆门", "荆州", "岳阳", "信阳", "孝感", "武汉", "合肥", "安庆", "九江", "滁州", "芜湖",
+          "马鞍山", "中华门", "南京港", "南京各经销商"]
 # 转换铁路运输成本
-change_cost_time_railway = [0.04, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.03, 0.06, 0.06, 0.04, 0.06, 0.05,
-                            0.06, 0.05]
+change_cost_time_railway = [0.06, 0.05, 0.04, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06, 0.03, 0.06, 0.06, 0.04, 0.06, 0.05,
+                            0.06, 0.06, 0.06, 0.06]
 # 转换船运输成本
-change_cost_time_ship = [0.08, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.08, 0.1, 0.09, 0.08, 0.1, 0.1, 0.09, 0.09]
+change_cost_time_ship = [0.1, 0.06, 0.09, 0.08, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.08, 0.1, 0.09, 0.08, 0.1, 0.1, 0.09, 0.1, 0.09, 0.1]
 # 坐标（绘图）
 distance_x = [
-    100, 200, 200, 300, 300, 300, 300, 400, 400, 400, 500, 500, 500, 600, 600, 600, 700]
+    100, 150, 150, 150, 200, 200, 300, 300, 300, 300, 400, 400, 400, 500, 500, 500, 600, 600, 600, 650, 650, 700]
 distance_y = [
-    350, 400, 300, 500, 400, 300, 200, 450, 350, 250, 450, 350, 250, 450, 350, 250, 350]
+    350, 425, 350, 275, 400, 300, 500, 400, 300, 200, 450, 350, 250, 450, 350, 250, 450, 350, 250, 375, 325, 350]
 destination = len(distance_x) - 1
 # 运输成本（距离影响）
 cost_low = [1.42, 0.77, 1.13]
 cost_middle = [1.21, 0.58, 0.96]
 cost_high = [1.07, 0.46, 0.67]
-# 城市分级
-connectivity = {0: [1, 2], 1: [3, 4, 5], 2: [3, 4, 5, 6], 3: [7, 8, 9], 4: [7, 8, 9], 5: [7, 8, 9], 6: [7, 8, 9],
-                7: [10, 11, 12], 8: [10, 11, 12], 9: [10, 11, 12], 10: [13, 14, 15], 11: [13, 14, 15], 12: [13, 14, 15],
-                13: [16], 14: [16], 15: [16]}
 # 运输距离，0表示不通
 distances = [[[] for i in range(len(distance_x) * 3)] for i in range(len(distance_x) * 3)]
-distances[0][1] = [560, 648, 473]
-distances[0][2] = [690, 0, 656]
-distances[1][3] = [246, 0, 141]
-distances[1][4] = [114, 0, 215]
-distances[1][5] = [110, 148, 432]
-distances[1][6] = [268, 395, 211]
-distances[2][3] = [371, 0, 239]
-distances[2][4] = [245, 0, 314]
-distances[2][5] = [170, 0, 239]
-distances[2][6] = [178, 0, 310]
-distances[3][7] = [235, 0, 206]
-distances[3][8] = [231, 0, 285]
-distances[3][9] = [293, 0, 262]
-distances[4][7] = [275, 0, 276]
-distances[4][8] = [182, 0, 355]
-distances[4][9] = [224, 0, 226]
-distances[5][7] = [315, 0, 358]
-distances[5][8] = [204, 0, 437]
-distances[5][9] = [218, 478, 308]
-distances[6][7] = [362, 0, 325]
-distances[6][8] = [236, 0, 246]
-distances[6][9] = [196, 231, 221]
-distances[7][10] = [327, 0, 267]
-distances[7][11] = [425, 0, 351]
-distances[7][12] = [422, 0, 309]
-distances[8][10] = [392, 0, 346]
-distances[8][11] = [362, 0, 340]
-distances[8][12] = [316, 0, 239]
-distances[9][10] = [371, 0, 321]
-distances[9][11] = [321, 433, 314]
-distances[9][12] = [258, 269, 213]
-distances[10][13] = [119, 0, 221]
-distances[10][14] = [132, 0, 179]
-distances[10][15] = [145, 0, 189]
-distances[11][13] = [272, 0, 306]
-distances[11][14] = [185, 204, 264]
-distances[11][15] = [232, 252, 273]
-distances[12][13] = [454, 0, 383]
-distances[12][14] = [352, 368, 236]
-distances[12][15] = [400, 416, 260]
-distances[13][16] = [64, 0, 108]
-distances[14][16] = [97, 96, 141]
-distances[15][16] = [52, 48, 116]
+distances[0][1] = [41.9, 0, 0]
+distances[0][2] = [36.9, 0, 0]
+distances[0][3] = [24.3, 0, 0]
+distances[0][4] = [560, 0, 0]
+distances[0][5] = [690, 0, 0]
+distances[1][4] = [0, 0, 473]
+distances[1][5] = [0, 0, 656]
+distances[2][4] = [0, 648, 473]
+distances[2][5] = [0, 648, 656]
+distances[3][4] = [0, 648, 473]
+distances[3][5] = [0, 648, 656]
+distances[4][6] = [246, 0, 141]
+distances[4][7] = [114, 0, 215]
+distances[4][8] = [110, 148, 432]
+distances[4][9] = [268, 395, 211]
+distances[5][6] = [371, 0, 239]
+distances[5][7] = [245, 0, 314]
+distances[5][8] = [170, 0, 239]
+distances[5][9] = [178, 0, 310]
+distances[6][10] = [235, 0, 206]
+distances[6][11] = [231, 0, 285]
+distances[6][12] = [293, 0, 262]
+distances[7][10] = [275, 0, 276]
+distances[7][11] = [182, 0, 355]
+distances[7][12] = [224, 0, 226]
+distances[8][10] = [315, 0, 358]
+distances[8][11] = [204, 0, 437]
+distances[8][12] = [218, 478, 308]
+distances[9][10] = [362, 0, 325]
+distances[9][11] = [236, 0, 246]
+distances[9][12] = [196, 231, 221]
+distances[10][13] = [327, 0, 267]
+distances[10][14] = [425, 0, 351]
+distances[10][15] = [422, 0, 309]
+distances[11][13] = [392, 0, 346]
+distances[11][14] = [362, 0, 340]
+distances[11][15] = [316, 0, 239]
+distances[12][16] = [371, 0, 321]
+distances[12][14] = [321, 433, 314]
+distances[12][15] = [258, 269, 213]
+distances[13][16] = [119, 0, 221]
+distances[13][17] = [132, 0, 179]
+distances[13][18] = [145, 0, 189]
+distances[14][16] = [272, 0, 306]
+distances[14][17] = [185, 204, 264]
+distances[14][18] = [232, 252, 273]
+distances[15][16] = [454, 0, 383]
+distances[15][17] = [352, 368, 236]
+distances[15][18] = [400, 416, 260]
+distances[16][19] = [64, 0, 108]
+distances[17][19] = [97, 0, 141]
+distances[17][20] = [0, 96, 0]
+distances[18][19] = [52, 0, 116]
+distances[18][20] = [0, 48, 0]
+distances[19][21] = [87.7, 0, 0]
+distances[20][21] = [251.6, 0, 0]
 
+# 城市分级
+connectivity = {}
+for i in range(city_num):
+    tmp = []
+    for j in range(i + 1, city_num):
+        if j == len(distances):
+            break
+        if distances[i][j] != []:
+            tmp.append(j)
+            connectivity[i] = tmp
 # 城市距离和信息素
 distance_graph = [[0.0 for col in range(city_num)] for raw in range(city_num)]
 pheromone_graph = [[1.0 for col in range(city_num)] for raw in range(city_num)]
@@ -689,7 +708,7 @@ class TSP(object):
                 # 连线
                 self.line(self.best_ant.path)
                 # 设置标题
-                self.title("LXR多式联运ACO(n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d"
+                self.title("多式联运ACO(n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d"
                            % (self.iter + self.max_iter * self.current_sampling_times))
                 # 更新画布
                 self.canvas.update()
