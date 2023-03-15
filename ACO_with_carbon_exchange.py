@@ -21,7 +21,7 @@ one_man_carbon = 13.55
 # 服务人工数
 server_man_number = 10
 # 碳排放额度上限
-carbon_max = 4000
+carbon_max = 40000
 # 碳税
 carbon_tax = 50
 # 运输碳排放系数
@@ -454,8 +454,11 @@ class Ant(object):
         self.total_carbon += self.total_time * one_man_carbon * server_man_number
         self.total_man_carbon += self.total_time * one_man_carbon * server_man_number
         # 加入碳排放成本
-        self.total_cost += (self.total_carbon - carbon_max) * carbon_remedy_amount
-        self.total_carbon_cost += (self.total_carbon - carbon_max) * carbon_remedy_amount
+        if self.total_carbon < carbon_max:
+            self.total_cost -= (carbon_max - self.total_carbon) * carbon_remedy_amount
+            self.total_carbon_cost = (carbon_max - self.total_carbon) * carbon_remedy_amount
+        else:
+            self.total_carbon_cost = 0
 
 
 # ----------- TSP问题 -----------
@@ -465,7 +468,7 @@ class TSP(object):
     def __init__(self, root, width=800, height=600, n=city_num):
 
         # 创建画布
-        self.max_iter = 15
+        self.max_iter = 50
         self.total_sampling_times = 20
         self.current_sampling_times = 0
         self.best_ant_after_rerunning = Ant(-1)  # 初始多重实验后的最优解
@@ -485,7 +488,7 @@ class TSP(object):
             yscrollincrement=1
         )
         self.canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
-        self.title("TSP蚁群算法(n:初始化 e:开始搜索 s:停止搜索 q:退出程序)")
+        self.title("ACO-多式联运-碳交易  (n:初始化 e:开始搜索 s:停止搜索 q:退出程序)")
         self.__r = 5
         self.__lock = threading.RLock()  # 线程锁
 
@@ -661,7 +664,7 @@ class TSP(object):
                                " 总安全资金成本：{} CNY\n" \
                                " 总衔接成本：{} CNY\n" \
                                " 总惩罚成本：{} CNY\n" \
-                               " 总碳排放成本：{} CNY\n" \
+                               " 总碳交易收益：{} CNY\n" \
                                " 总时间成本：{} h\n" \
                                " 总转运时间成本：{} h\n" \
                                " 总运输（路上）时间成本:{} h\n" \
@@ -689,7 +692,7 @@ class TSP(object):
                 # 连线
                 self.line(self.best_ant.path)
                 # 设置标题
-                self.title("多式联运ACO(n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d"
+                self.title("ACO-多式联运-碳交易  (n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d"
                            % (self.iter + self.max_iter * self.current_sampling_times))
                 # 更新画布
                 self.canvas.update()
@@ -701,7 +704,7 @@ class TSP(object):
                     self.current_sampling_times += 1
 
         # 打印最终最优方案
-        print("=======碳补偿/碳交易方案=======")
+        print("=======交易方案=======")
         path_print = ""
         for i in range(len(self.best_ant_after_rerunning.path)):
             if i != len(self.best_ant_after_rerunning.path) - 1:
@@ -721,7 +724,7 @@ class TSP(object):
                        " 总安全资金成本：{} CNY\n" \
                        " 总衔接成本：{} CNY\n" \
                        " 总惩罚成本：{} CNY\n" \
-                       " 总碳排放成本：{} CNY\n" \
+                       " 总碳交易收益：{} CNY\n" \
                        " 总时间成本：{} h\n" \
                        " 总转运时间成本：{} h\n" \
                        " 总运输（路上）时间成本:{} h\n" \

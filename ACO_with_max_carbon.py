@@ -21,7 +21,7 @@ one_man_carbon = 13.55
 # 服务人工数
 server_man_number = 10
 # 碳排放额度上限
-carbon_max = 40000
+carbon_max = 30000
 # 碳税
 carbon_tax = 50
 # 运输碳排放系数
@@ -481,7 +481,7 @@ class TSP(object):
     def __init__(self, root, width=800, height=600, n=city_num):
 
         # 创建画布
-        self.max_iter = 15
+        self.max_iter = 50
         self.total_sampling_times = 20
         self.current_sampling_times = 0
         self.best_ant_after_rerunning = Ant(-1)  # 初始多重实验后的最优解
@@ -502,7 +502,7 @@ class TSP(object):
             yscrollincrement=1
         )
         self.canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
-        self.title("TSP蚁群算法(n:初始化 e:开始搜索 s:停止搜索 q:退出程序)")
+        self.title("ACO-多式联运-碳强制 (n:初始化 e:开始搜索 s:停止搜索 q:退出程序)")
         self.__r = 5
         self.__lock = threading.RLock()  # 线程锁
 
@@ -656,7 +656,7 @@ class TSP(object):
                     # 搜索一条路径
                     ant.search_path()
                     # 与当前最优蚂蚁比较
-                    if ant.total_cost < self.best_ant.total_cost or ant.total_carbon < self.best_ant.total_carbon:
+                    if ant.total_cost < self.best_ant.total_cost and ant.total_carbon < carbon_max:
                         # 更新最优解
                         self.best_ant = copy.deepcopy(ant)
                 # 更新信息素
@@ -708,7 +708,7 @@ class TSP(object):
                 # 连线
                 self.line(self.best_ant.path)
                 # 设置标题
-                self.title("多式联运ACO(n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d"
+                self.title("ACO-多式联运-碳强制 (n:随机初始 e:开始搜索 s:停止搜索 q:退出程序) 迭代次数: %d"
                            % (self.iter + self.max_iter * self.current_sampling_times))
                 # 更新画布
                 self.canvas.update()
