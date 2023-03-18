@@ -57,7 +57,7 @@ change_cost_time_railway = [0.06, 0.05, 0.04, 0.06, 0.06, 0.06, 0.06, 0.06, 0.06
 change_cost_time_ship = [0.1, 0.06, 0.09, 0.08, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.08, 0.1, 0.09, 0.08, 0.1, 0.1, 0.09, 0.1, 0.09, 0.1]
 # 坐标（绘图）
 distance_x = [
-    100, 150, 150, 150, 200, 200, 300, 300, 300, 300, 400, 400, 400, 500, 500, 500, 600, 600, 600, 650, 650, 700]
+    75, 150, 150, 150, 200, 200, 300, 300, 300, 300, 400, 400, 400, 500, 500, 500, 600, 600, 600, 675, 675, 752]
 distance_y = [
     350, 275, 350, 425, 300, 400, 200, 300, 400, 500, 250, 350, 450, 250, 350, 450, 250, 350, 450, 325, 375, 350]
 destination = len(distance_x) - 1
@@ -701,7 +701,7 @@ class TSP(object):
                             str(int(self.best_ant.total_connecting_cost)),
                             str(int(self.best_ant.total_punishment_cost)),
                             str(int(self.best_ant.total_carbon_cost)),
-                            str(round(self.best_ant.total_time, 2)),
+                            str(round(self.best_ant.total_time  - start_time, 2)),
                             str(round(self.best_ant.total_change_time, 2)),
                             str(round(self.best_ant.total_transport_time, 2)),
                             str(round(self.best_ant.total_carbon, 2)),
@@ -763,7 +763,7 @@ class TSP(object):
                         str(int(self.best_ant_after_rerunning.total_connecting_cost)),
                         str(int(self.best_ant_after_rerunning.total_punishment_cost)),
                         str(int(self.best_ant_after_rerunning.total_carbon_cost)),
-                        str(round(self.best_ant_after_rerunning.total_time, 2)),
+                        str(round(self.best_ant_after_rerunning.total_time  - start_time, 2)),
                         str(round(self.best_ant_after_rerunning.total_change_time, 2)),
                         str(round(self.best_ant_after_rerunning.total_transport_time, 2)),
                         str(round(self.best_ant_after_rerunning.total_carbon, 2)),
