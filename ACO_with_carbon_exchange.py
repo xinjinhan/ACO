@@ -720,6 +720,26 @@ class TSP(object):
         path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
         print(path_print)
 
+        path_print = ""
+        for i in range(len(self.best_ant_after_rerunning.path)):
+            if i != len(self.best_ant_after_rerunning.path) - 1:
+                path_print += str(self.best_ant_after_rerunning.path[i]) + "(到达时间：" \
+                              + str(round(self.best_ant_after_rerunning.time_sequence[i], 1)) \
+                              + ")>" + str(transports[self.best_ant_after_rerunning.trans[i]]) + ">"
+            else:
+                path_print += str(self.best_ant_after_rerunning.path[i])
+        path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
+        print(path_print)
+
+        path_print = ""
+        for i in range(len(self.best_ant_after_rerunning.path)):
+            if i != len(self.best_ant_after_rerunning.path) - 1:
+                path_print += str(self.best_ant_after_rerunning.path[i]) +">"\
+                              + str(transports[self.best_ant_after_rerunning.trans[i]]) + ">"
+            else:
+                path_print += str(self.best_ant_after_rerunning.path[i])
+        print(path_print)
+
         result_print = " 迭代次数：{}\n" \
                        " 最佳路径总距离：{}\n" \
                        " 总资金成本：{} CNY\n" \
