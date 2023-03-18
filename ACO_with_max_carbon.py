@@ -15,6 +15,9 @@ ALPHA:信息启发因子，值越大，则蚂蚁选择之前走过的路径可�
 BETA:Beta值越大，蚁群越就容易选择局部较短路径，这时算法收敛速度会
      加快，但是随机性不高，容易得到局部的相对最优
 '''
+# 最大迭代次数
+max_iteration = 1500
+# ACO参数
 (ALPHA, BETA, RHO, Q) = (10.0, 1.0, 0.5, 10.0)
 # 单位人工碳排放数
 one_man_carbon = 13.55
@@ -30,7 +33,8 @@ carbon_transports = [0.1716, 0.0154, 0.0331]
 carbon_change = [4.86, 6.42, 8.24]
 # 碳交易与碳补尝
 carbon_remedy_amount = 20
-
+# 发车时间
+start_time = 16.0
 # 城市数，蚁群
 (city_num, ant_num) = (22, 50)
 # 运输汽车数量
@@ -55,7 +59,7 @@ change_cost_time_ship = [0.1, 0.06, 0.09, 0.08, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.
 distance_x = [
     100, 150, 150, 150, 200, 200, 300, 300, 300, 300, 400, 400, 400, 500, 500, 500, 600, 600, 600, 650, 650, 700]
 distance_y = [
-    350, 425, 350, 275, 400, 300, 500, 400, 300, 200, 450, 350, 250, 450, 350, 250, 450, 350, 250, 375, 325, 350]
+    350, 275, 350, 425, 300, 400, 200, 300, 400, 500, 250, 350, 450, 250, 350, 450, 250, 350, 450, 325, 375, 350]
 destination = len(distance_x) - 1
 # 运输成本（距离影响）
 cost_low = [1.42, 0.77, 1.13]
@@ -149,7 +153,7 @@ class Ant(object):
 
         self.path = []  # 当前蚂蚁的路径
         self.trans = []  # 运输方式
-        self.time_sequence = [0]  # 运输时间节点
+        self.time_sequence = [start_time]  # 运输时间节点
         self.total_distance = 0.0  # 当前路径的总距离
         self.move_count = 0  # 移动次数
         self.current_city = -1  # 当前停留的城市
@@ -159,7 +163,7 @@ class Ant(object):
         self.path.append(city_index)
         self.open_table_city[city_index] = False
         self.total_cost = 0  # 总花费资金
-        self.total_time = 0  # 总花费时间
+        self.total_time = start_time  # 总花费时间
         self.total_change_cost = 0  # 总转运花费资金
         self.total_connecting_cost = 0  # 总衔接成本
         self.total_carbon_cost = 0  # 总碳排放成本
@@ -431,8 +435,8 @@ class Ant(object):
         self.total_cost += self.__cal_cost(current_distance, type_transport)
         self.total_transport_cost += self.__cal_cost(current_distance, type_transport)
         # 当前安全成本
-        self.total_cost += safety_cost[type_transport] * num_of_cars
-        self.total_safety_cost += safety_cost[type_transport] * num_of_cars
+        self.total_cost += safety_cost[type_transport] * num_of_cars * current_distance
+        self.total_safety_cost += safety_cost[type_transport] * num_of_cars * current_distance
         # 当前衔接等待成本
         self.total_cost += connecting_cost[type_transport] * num_of_cars
         self.total_connecting_cost += connecting_cost[type_transport] * num_of_cars
@@ -481,7 +485,7 @@ class TSP(object):
     def __init__(self, root, width=800, height=600, n=city_num):
 
         # 创建画布
-        self.max_iter = 50
+        self.max_iter = max_iteration / 20
         self.total_sampling_times = 20
         self.current_sampling_times = 0
         self.best_ant_after_rerunning = Ant(-1)  # 初始多重实验后的最优解
