@@ -458,11 +458,8 @@ class Ant(object):
         self.total_carbon += self.total_time * one_man_carbon * server_man_number
         self.total_man_carbon += self.total_time * one_man_carbon * server_man_number
         # 加入碳排放成本
-        if self.total_carbon < carbon_max:
-            self.total_cost -= (carbon_max - self.total_carbon) * carbon_remedy_amount
-            self.total_carbon_cost = (carbon_max - self.total_carbon) * carbon_remedy_amount
-        else:
-            self.total_carbon_cost = 0
+        self.total_cost -= (carbon_max - self.total_carbon) * carbon_remedy_amount
+        self.total_carbon_cost = (carbon_max - self.total_carbon) * carbon_remedy_amount
 
 
 # ----------- TSP问题 -----------
@@ -713,22 +710,22 @@ class TSP(object):
         for i in range(len(self.best_ant_after_rerunning.path)):
             if i != len(self.best_ant_after_rerunning.path) - 1:
                 path_print += str(cities[self.best_ant_after_rerunning.path[i]]) + "(到达时间：" \
-                              + str(round(self.best_ant_after_rerunning.time_sequence[i], 1)) \
+                              + str(round(self.best_ant_after_rerunning.time_sequence[i], 2)) \
                               + ")-" + str(transports[self.best_ant_after_rerunning.trans[i]]) + "->"
             else:
                 path_print += str(cities[self.best_ant_after_rerunning.path[i]])
-        path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
+        path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 2)))
         print(path_print)
 
         path_print = ""
         for i in range(len(self.best_ant_after_rerunning.path)):
             if i != len(self.best_ant_after_rerunning.path) - 1:
                 path_print += str(self.best_ant_after_rerunning.path[i]) + "(到达时间：" \
-                              + str(round(self.best_ant_after_rerunning.time_sequence[i], 1)) \
+                              + str(round(self.best_ant_after_rerunning.time_sequence[i], 2)) \
                               + ")>" + str(transports[self.best_ant_after_rerunning.trans[i]]) + ">"
             else:
                 path_print += str(self.best_ant_after_rerunning.path[i])
-        path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
+        path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 2)))
         print(path_print)
 
         path_print = ""

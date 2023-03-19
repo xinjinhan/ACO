@@ -16,7 +16,7 @@ BETA:Beta值越大，蚁群越就容易选择局部较短路径，这时算法�
      加快，但是随机性不高，容易得到局部的相对最优
 '''
 # 最大迭代次数
-max_iteration = 1500
+max_iteration = 20
 # ACO参数
 (ALPHA, BETA, RHO, Q) = (10.0, 1.0, 0.5, 10.0)
 # 单位人工碳排放数
@@ -508,7 +508,7 @@ class TSP(object):
         )
         self.canvas.pack(expand=tkinter.YES, fill=tkinter.BOTH)
         self.title("ACO-多式联运-碳强制 (n:初始化 e:开始搜索 s:停止搜索 q:退出程序)")
-        self.__r = 5
+        self.__r = 8
         self.__lock = threading.RLock()  # 线程锁
 
         self.__bindEvents()
@@ -549,9 +549,9 @@ class TSP(object):
             self.nodes2.append(node)
             # 显示坐标
             self.canvas.create_text(x, y - 10,  # 使用create_text方法在坐标（302，77）处绘制文字
-                                    text=str(i) + ' ' + str(cities[i]),  # 所绘制文字的内容
-                                    fill='black'  # 所绘制文字的颜色为灰色
-                                    )
+                                    text=str(i) + " " + str(cities[i]),  # 所绘制文字的内容
+                                    fill='black',  # 所绘制文字的颜色为灰色
+                                    font=10)
 
         # 顺序连接城市
         # self.line(range(city_num))
@@ -620,7 +620,7 @@ class TSP(object):
 
         def line2(i1, i2):
             p1, p2 = self.nodes[i1], self.nodes[i2]
-            self.canvas.create_line(p1, p2, fill="#000000", tags="line")
+            self.canvas.create_line(p1, p2, fill="#000000", tags="line", width=4)
             return i2
 
         # order[-1]为初始值
@@ -732,22 +732,22 @@ class TSP(object):
             for i in range(len(self.best_ant_after_rerunning.path)):
                 if i != len(self.best_ant_after_rerunning.path) - 1:
                     path_print += str(cities[self.best_ant_after_rerunning.path[i]]) + "(到达时间：" \
-                                  + str(round(self.best_ant_after_rerunning.time_sequence[i], 1)) \
+                                  + str(round(self.best_ant_after_rerunning.time_sequence[i], 2)) \
                                   + ")-" + str(transports[self.best_ant_after_rerunning.trans[i]]) + "->"
                 else:
                     path_print += str(cities[self.best_ant_after_rerunning.path[i]])
-            path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
+            path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 2)))
             print(path_print)
 
             path_print = ""
             for i in range(len(self.best_ant_after_rerunning.path)):
                 if i != len(self.best_ant_after_rerunning.path) - 1:
                     path_print += str(self.best_ant_after_rerunning.path[i]) + "(到达时间：" \
-                                  + str(round(self.best_ant_after_rerunning.time_sequence[i], 1)) \
+                                  + str(round(self.best_ant_after_rerunning.time_sequence[i], 2)) \
                                   + ")>" + str(transports[self.best_ant_after_rerunning.trans[i]]) + ">"
                 else:
                     path_print += str(self.best_ant_after_rerunning.path[i])
-            path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 1)))
+            path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 2)))
             print(path_print)
 
             path_print = ""
