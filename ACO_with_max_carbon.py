@@ -239,7 +239,7 @@ class Ant(object):
                         continue
 
                     select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(
-                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport))), BETA)
+                        (1.0 / min(abs(filter(lambda x: x != 0, possible_choice_of_path_with_transport)))), BETA)
                     total_prob += select_citys_prob[i]
                 except ZeroDivisionError as e:
                     print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,
@@ -332,8 +332,8 @@ class Ant(object):
                         total_prob += select_citys_prob[i]
                         continue
                     select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(
-                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport))), BETA) * pow(
-                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport_carbon))), BETA)
+                        (1.0 / min(abs(filter(lambda x: x != 0, possible_choice_of_path_with_transport)))), BETA) * pow(
+                        (1.0 / min(abs(filter(lambda x: x != 0, possible_choice_of_path_with_transport_carbon)))), BETA)
                     total_prob += select_citys_prob[i]
                 except ZeroDivisionError as e:
                     print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,

@@ -138,6 +138,10 @@ for i in range(city_num):
 distance_graph = [[0.0 for col in range(city_num)] for raw in range(city_num)]
 pheromone_graph = [[1.0 for col in range(city_num)] for raw in range(city_num)]
 
+start_time = 0
+end_time = 0
+
+
 # ----------- 蚂蚁 -----------
 class Ant(object):
 
@@ -228,7 +232,7 @@ class Ant(object):
                         continue
 
                     select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(
-                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport))), BETA)
+                        (1.0 / min(abs(filter(lambda x: x != 0, possible_choice_of_path_with_transport)))), BETA)
                     total_prob += select_citys_prob[i]
                 except ZeroDivisionError as e:
                     print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,
@@ -314,7 +318,7 @@ class Ant(object):
                         continue
 
                     select_citys_prob[i] = pow(pheromone_graph[self.current_city][i], ALPHA) * pow(
-                        (1.0 / min(filter(lambda x: x > 0, possible_choice_of_path_with_transport))), BETA)
+                        (1.0 / min(abs(filter(lambda x: x != 0, possible_choice_of_path_with_transport)))), BETA)
                     total_prob += select_citys_prob[i]
                 except ZeroDivisionError as e:
                     print('Ant ID: {ID}, current city: {current}, target city: {target}'.format(ID=self.ID,
@@ -628,7 +632,7 @@ class TSP(object):
         self.__lock.acquire()
         self.__running = True
         self.__lock.release()
-
+        start_time = time.time()
         while self.__running:
             while self.current_sampling_times != self.total_sampling_times:
                 # 遍历每一只蚂蚁
@@ -701,16 +705,18 @@ class TSP(object):
 
         # 打印最终最优方案
         print("=======无碳排政策方案=======")
-        path_print = ""
+        new_path_print = ""
         for i in range(len(self.best_ant_after_rerunning.path)):
             if i != len(self.best_ant_after_rerunning.path) - 1:
-                path_print += str(cities[self.best_ant_after_rerunning.path[i]]) + "(到达时间：" \
+                new_path_print += str(cities[self.best_ant_after_rerunning.path[i]]) + "(到达时间：" \
                               + str(round(self.best_ant_after_rerunning.time_sequence[i], 2)) \
                               + ")-" + str(transports[self.best_ant_after_rerunning.trans[i]]) + "->"
+                if i == len(self.best_ant_after_rerunning.path) / 2 - 1:
+                    new_path_print += "\n"
             else:
-                path_print += str(cities[self.best_ant_after_rerunning.path[i]])
-        path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 2)))
-        print(path_print)
+                new_path_print += str(cities[self.best_ant_after_rerunning.path[i]])
+        new_path_print += "（到达时间：{}）".format(str(round(self.best_ant_after_rerunning.time_sequence[-1], 2)))
+        print(new_path_print)
 
         path_print = ""
         for i in range(len(self.best_ant_after_rerunning.path)):
@@ -748,7 +754,7 @@ class TSP(object):
                        " 总运输碳排放:{} kg \n" \
                        " 总转运碳排放:{} kg \n" \
                        " 总人力碳排放:{} kg \n" \
-            .format((self.iter + self.max_iter * self.current_sampling_times - 1),
+            .format(int(self.iter + self.max_iter * self.current_sampling_times - 1),
                     str(int(self.best_ant_after_rerunning.total_distance)),
                     str(int(self.best_ant_after_rerunning.total_cost)),
                     str(int(self.best_ant_after_rerunning.total_change_cost)),
@@ -767,6 +773,15 @@ class TSP(object):
         print(result_print)
         self.line(self.best_ant_after_rerunning.path)
         self.stop(evt)
+        # self.canvas.create_text(180, 700,  # 使用create_text方法在坐标（302，77）处绘制文字
+        #                         text=result_print,  # 所绘制文字的内容
+        #                         fill='black'  # 所绘制文字的颜色为灰色
+        #                         )
+        # self.canvas.create_text(430, 530,  # 使用create_text方法在坐标（302，77）处绘制文字
+        #                         text=new_path_print,  # 所绘制文字的内容
+        #                         fill='black'  # 所绘制文字的颜色为灰色
+        #                         )
+
 
     # 更新信息素
     def __update_pheromone_gragh(self):
@@ -799,3 +814,5 @@ if __name__ == '__main__':
 -------------------------------------------------------- 
     """)
     TSP(tkinter.Tk()).mainloop()
+
+
