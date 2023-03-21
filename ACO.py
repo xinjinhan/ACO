@@ -632,7 +632,6 @@ class TSP(object):
         self.__lock.acquire()
         self.__running = True
         self.__lock.release()
-        start_time = time.time()
         while self.__running:
             while self.current_sampling_times != self.total_sampling_times:
                 # 遍历每一只蚂蚁
@@ -763,7 +762,7 @@ class TSP(object):
                     str(int(self.best_ant_after_rerunning.total_connecting_cost)),
                     str(int(self.best_ant_after_rerunning.total_punishment_cost)),
                     str(int(self.best_ant_after_rerunning.total_carbon_cost)),
-                    str(round(self.best_ant_after_rerunning.total_time  - start_time, 2)),
+                    str(round(self.best_ant_after_rerunning.total_time - start_time, 2)),
                     str(round(self.best_ant_after_rerunning.total_change_time, 2)),
                     str(round(self.best_ant_after_rerunning.total_transport_time, 2)),
                     str(round(self.best_ant_after_rerunning.total_carbon, 2)),
